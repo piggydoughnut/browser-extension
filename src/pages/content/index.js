@@ -1,13 +1,14 @@
+console.log('Content script loaded')
+
 import { register } from "@substrate/light-client-extension-helpers/content-script"
 
 const CHANNEL_ID = "substrate-wallet-template"
 
-console.log('run meeee')
 
 try {
   const s = document.createElement("script")
   s.type = "module"
-  s.src = chrome.runtime.getURL("./inpage.js")
+  s.src = chrome.runtime.getURL("./inpage/index.js")
   s.onload = () => s.remove()
   ;(document.head || document.documentElement).appendChild(s)
 } catch (error) {

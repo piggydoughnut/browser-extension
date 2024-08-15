@@ -14,11 +14,11 @@ const manifest: ManifestTypeV3 = {
     "128": "public/icon-128.png",
   },
   content_security_policy: {
-    extension_pages: "script-src 'self'; object-src 'self'",
+    extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'",
   },
   web_accessible_resources: [
     {
-      resources: ["public/*", "assets/*"],
+      resources: ["public/*", "assets/*", "inpage/index.js"],
       matches: ["<all_urls>"],
     },
   ],

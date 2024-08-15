@@ -156,7 +156,7 @@ async function buildJSPage(
     entryPoints: [entry],
     bundle: true,
     outdir: resolve(outdir, name),
-    logLevel: "verbose",
+    // logLevel: "verbose",
     sourcemap: dev,
     minify: true,
     target: ["chrome67"],
@@ -618,7 +618,6 @@ function DevBrowserExt(browsers: string[]) {
       process.exit(0);
     })
     .catch((err) => {
-      console.log("ETFFD<MFNSDFNSDKFJN");
       for (const { command, exitCode } of err) {
         if (exitCode !== 0) {
           console.error(`${command.command}:\n exited with code ${exitCode}\n`);
