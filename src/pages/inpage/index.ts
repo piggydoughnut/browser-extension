@@ -1,31 +1,67 @@
-import { getLightClientProvider } from "@substrate/light-client-extension-helpers/web-page";
+import { connectInjectedExtension } from "@polkadot-api/pjs-signer";
+import { toHex, fromHex } from "@polkadot-api/utils";
+import { createTx } from "@substrate/light-client-extension-helpers/tx-helper"; // 👈 create-tx import
+import { Unstable } from "@substrate/connect-discovery";
 import {
-  // make as makeSmoldotDiscoveryConnector,
-  // SmoldotExtensionProviderDetail,
-  getSmoldotExtensionProviders,
-} from "@substrate/smoldot-discovery";
-import { SmoldotExtensionProviderDetail } from "@substrate/smoldot-discovery/types";
+  getLightClientProvider,
+  LightClientProvider,
+} from "@substrate/light-client-extension-helpers/web-page";
 
 const CHANNEL_ID = "substrate-wallet-template";
 
 const PROVIDER_INFO = {
   uuid: crypto.randomUUID(),
-  name: "Substrate Connect Wallet Template",
+  name: "Abra cadabra",
   icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'/>",
   rdns: "io.github.paritytech.SubstrateConnectWalletTemplate",
 };
 
-const lightClientProvider = getLightClientProvider(CHANNEL_ID);
+const lightClientProviderPromise = getLightClientProvider(CHANNEL_ID);
 
 // #region Smoldot Discovery Provider
 {
-  const provider: SmoldotExtensionProviderDetail = lightClientProvider.then(
-    getSmoldotExtensionProviders()
+  const provider = lightClientProviderPromise.then(
+    (lightClientProvider: LightClientProvider): Unstable.Provider => ({
+      ...lightClientProvider,
+      async createTx(chainId: string, from: string, callData: string) {
+        const chains = Object.values(lightClientProvider.getChains());
+        const chain = chains.find(({ genesisHash }) => genesisHash === chainId);
+
+        if (!chain) {
+          throw new Error("unknown chain");
+        }
+
+        const injectedExt = await connectInjectedExtension("polkadot-js");
+
+        const account = injectedExt
+          .getAccounts()
+          .find((account) => toHex(account.polkadotSigner.publicKey) === from);
+
+        if (!account) {
+          throw new Error("no account");
+        }
+
+        const signer = account.polkadotSigner;
+
+        const tx = await createTx(chain.connect)({
+          callData: fromHex(callData),
+          signer,
+        });
+
+        return toHex(tx);
+      },
+      async getAccounts(_chainId: string) {
+        const injectedExt = await connectInjectedExtension("polkadot-js");
+        const accounts = injectedExt.getAccounts();
+
+        return accounts;
+      },
+    })
   );
 
-  const detail = Object.freeze({
+  const detail: Unstable.SubstrateConnectProviderDetail = Object.freeze({
     info: PROVIDER_INFO,
-    kind: "smoldot-v1",
+    kind: "substrate-connect-unstable",
     provider,
   });
 
